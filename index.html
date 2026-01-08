@@ -53,24 +53,21 @@
             text-shadow: 0 0 40px #ffcc00;
             transform: scale(1.04);
         }
-        /* Контентний блок */
         .content {
             flex: 1;
-            padding: 10px 12px 16px; /* відступи з усіх боків, знизу більше для футера */
+            padding: 4px 6px; /* мінімальні відступи від країв */
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; /* вирівнювання згори */
-            gap: 6px; /* невеликий відступ між рядками */
+            gap: 4px; /* невеликий відступ між рядками */
             overflow-y: hidden;
         }
-        /* На мобільних — включаємо скрол і робимо контент скролитися під заголовком */
         @media (max-width: 768px) {
             .content {
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
                 scrollbar-width: none;
                 -ms-overflow-style: none;
-                padding-top: 6px; /* невеликий відступ від заголовка */
+                padding-top: 2px; /* щоб перше зображення не ховалося під заголовком */
             }
             .content::-webkit-scrollbar {
                 display: none;
@@ -79,7 +76,7 @@
         .row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 4px; /* зменшено з 8px до 4px */
+            gap: 4px; /* маленькі відстані між зображеннями */
         }
         .block {
             width: 100%;
@@ -89,7 +86,7 @@
             position: relative;
             cursor: pointer;
             transition: transform 0.3s ease;
-            transform: scale(0.82);
+            transform: scale(0.78);
             transform-origin: center;
         }
         .block::before {
@@ -112,7 +109,7 @@
             box-shadow: 0 0 30px #ffcc00;
         }
         .block:hover {
-            transform: scale(0.87);
+            transform: scale(0.83);
         }
         .block img {
             width: 100%;
@@ -135,13 +132,13 @@
         /* Адаптивність */
         @media (max-width: 1024px) {
             .row { grid-template-columns: repeat(2, 1fr); }
-            .block { transform: scale(0.90); }
-            .block:hover { transform: scale(0.95); }
+            .block { transform: scale(0.88); }
+            .block:hover { transform: scale(0.93); }
         }
         @media (max-width: 768px) {
             .row { grid-template-columns: repeat(2, 1fr); gap: 4px; }
-            .block { transform: scale(0.96); }
-            .block:hover { transform: scale(1); }
+            .block { transform: scale(0.95); }
+            .block:hover { transform: scale(0.99); }
         }
         @media (max-width: 480px) {
             .row { grid-template-columns: 1fr; }
