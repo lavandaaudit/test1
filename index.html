@@ -6,9 +6,7 @@
     <meta name="referrer" content="no-referrer">
     <meta name="robots" content="noindex,nofollow">
     <title>Ibonarium Cosmo Dynamics LAB LIVE</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-
     <style>
         * {
             margin: 0;
@@ -23,13 +21,11 @@
             color: #cfefff;
             font-family: 'Cinzel', serif;
         }
-
         canvas {
             position: fixed;
             inset: 0;
             z-index: 0;
         }
-
         .wrapper {
             position: relative;
             z-index: 1;
@@ -37,14 +33,12 @@
             display: flex;
             flex-direction: column;
         }
-
         .header {
             text-align: center;
             padding: 12px 10px;
             background: #000;
             flex-shrink: 0;
         }
-
         .main-title {
             font-size: clamp(20px, 4.5vw, 34px);
             font-weight: 700;
@@ -59,37 +53,34 @@
             text-shadow: 0 0 40px #ffcc00;
             transform: scale(1.04);
         }
-
         /* Контентний блок */
         .content {
             flex: 1;
-            padding: 8px 10px;
+            padding: 10px 12px 16px; /* відступи з усіх боків, знизу більше для футера */
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            gap: 10px;
-            overflow-y: hidden; /* За замовчуванням без скролу (десктоп) */
+            justify-content: flex-start; /* вирівнювання згори */
+            gap: 6px; /* невеликий відступ між рядками */
+            overflow-y: hidden;
         }
-
-        /* На мобільних (max-width: 768px) — включаємо скрол */
+        /* На мобільних — включаємо скрол і робимо контент скролитися під заголовком */
         @media (max-width: 768px) {
             .content {
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
                 scrollbar-width: none;
                 -ms-overflow-style: none;
+                padding-top: 6px; /* невеликий відступ від заголовка */
             }
             .content::-webkit-scrollbar {
                 display: none;
             }
         }
-
         .row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
+            gap: 4px; /* зменшено з 8px до 4px */
         }
-
         .block {
             width: 100%;
             aspect-ratio: 1 / 1;
@@ -98,10 +89,9 @@
             position: relative;
             cursor: pointer;
             transition: transform 0.3s ease;
-            transform: scale(0.78); /* Значно зменшено для десктопу */
+            transform: scale(0.82);
             transform-origin: center;
         }
-
         .block::before {
             content: '';
             position: absolute;
@@ -116,17 +106,14 @@
             pointer-events: none;
             z-index: 1;
         }
-
         .block:hover::before,
         .block:active::before {
             animation-duration: 1s, 2s;
             box-shadow: 0 0 30px #ffcc00;
         }
-
         .block:hover {
-            transform: scale(0.83);
+            transform: scale(0.87);
         }
-
         .block img {
             width: 100%;
             height: 100%;
@@ -134,22 +121,8 @@
             display: block;
             border-radius: 10px;
         }
-
-        @keyframes neonPulse {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 1; }
-        }
-
-        @keyframes neonFlicker {
-            0%, 100% { opacity: 1; }
-            2%, 68%, 92% { opacity: 0.95; }
-            4%, 70% { opacity: 0.8; }
-            6% { opacity: 1; }
-        }
-
         .red-gif img { filter: hue-rotate(0deg) saturate(1.6) brightness(1.1); }
         .blue-gif img { filter: hue-rotate(200deg) saturate(1.6) brightness(1.1); }
-
         .footer {
             text-align: center;
             padding: 8px 10px;
@@ -159,15 +132,16 @@
             opacity: 0.8;
             letter-spacing: 0.05em;
         }
-
         /* Адаптивність */
         @media (max-width: 1024px) {
             .row { grid-template-columns: repeat(2, 1fr); }
-            .block { transform: scale(0.88); }
+            .block { transform: scale(0.90); }
+            .block:hover { transform: scale(0.95); }
         }
         @media (max-width: 768px) {
-            .row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-            .block { transform: scale(0.95); }
+            .row { grid-template-columns: repeat(2, 1fr); gap: 4px; }
+            .block { transform: scale(0.96); }
+            .block:hover { transform: scale(1); }
         }
         @media (max-width: 480px) {
             .row { grid-template-columns: 1fr; }
@@ -177,14 +151,12 @@
 </head>
 <body>
     <canvas id="stars"></canvas>
-
     <div class="wrapper">
         <div class="header">
             <div class="main-title" onclick="window.open('https://t.me/ibonariumcosmodynamicslablive', '_blank')">
                 Ibonarium Cosmo Dynamics LAB LIVE
             </div>
         </div>
-
         <div class="content">
             <div class="row">
                 <div class="block red-gif">
@@ -200,7 +172,6 @@
                     <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0304.jpg" alt="AIA 304" loading="lazy">
                 </div>
             </div>
-
             <div class="row">
                 <div class="block blue-gif">
                     <img src="https://soho.nascom.nasa.gov/data/LATEST/current_c3.gif" alt="LASCO C3" loading="lazy">
@@ -216,18 +187,15 @@
                 </div>
             </div>
         </div>
-
         <div class="footer">
             NASA/ESA SOHO LASCO + NASA SDO AIA • Реал-тайм спостереження Сонця
         </div>
     </div>
-
     <script>
         // STARFIELD
         const canvas = document.getElementById("stars");
         const ctx = canvas.getContext("2d");
         let W, H, stars = [];
-
         function resize() {
             W = canvas.width = window.innerWidth;
             H = canvas.height = window.innerHeight;
@@ -237,7 +205,6 @@
         }
         resize();
         window.addEventListener("resize", resize);
-
         function render() {
             ctx.fillStyle = "#000";
             ctx.fillRect(0,0,W,H);
