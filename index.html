@@ -2,94 +2,226 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOHO/LASCO Real-Time Data & Анімації</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="referrer" content="no-referrer">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Ibonarium Cosmo Dynamics LAB LIVE</title>
+
+    <!-- GOOGLE FONTS: Cinzel -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
-            text-align: center;
-            margin: 20px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        h1 {
-            color: #ffcc00;
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden; /* Базово без скролу */
+            color: #cfefff;
+            font-family: 'Cinzel', serif;
         }
+
+        /* STARFIELD */
+        canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+        }
+
+        /* CONTENT */
         .container {
-            max-width: 1200px;
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 15px; /* Зменшено для мобільних */
+            max-width: 1400px;
             margin: 0 auto;
         }
-        .image-section {
-            margin: 40px 0;
+
+        .main-title {
+            font-size: clamp(28px, 8vw, 48px); /* Адаптивний розмір */
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            text-shadow: 0 0 20px #ffcc00;
+            color: #ffcc00;
+            transition: all 0.3s ease;
+            flex-shrink: 0; /* Не стискається */
         }
-        img {
-            max-width: 100%;
-            border: 2px solid #444;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+        .main-title:hover {
+            text-shadow: 0 0 40px #ffcc00;
+            transform: scale(1.05);
         }
+
+        /* Два ряди */
+        .rows-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 20px;
+            overflow-y: auto; /* Дозволяємо скрол тільки цьому блоку на мобільних */
+            -webkit-overflow-scrolling: touch; /* Плавний скрол на iOS */
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .block {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border-radius: 16px;
+            box-shadow: 0 0 25px rgba(255, 204, 0, 0.6);
+        }
+
+        .block img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Червоний відтінок для LASCO C2 */
+        .red-gif img {
+            filter: hue-rotate(0deg) saturate(1.6) brightness(1.1);
+        }
+
+        /* Синій відтінок для LASCO C3 */
+        .blue-gif img {
+            filter: hue-rotate(200deg) saturate(1.6) brightness(1.1);
+        }
+
+        /* Золотиста рамка для SDO фото */
+        .sdo-photo {
+            border: 3px solid #ffcc00;
+        }
+
         .note {
-            font-size: 0.9em;
-            color: #aaa;
-            margin-top: 20px;
+            text-align: center;
+            font-size: clamp(12px, 3vw, 14px);
+            opacity: 0.8;
+            letter-spacing: 0.05em;
+            flex-shrink: 0;
         }
-        .refresh {
-            font-size: 1.1em;
-            color: #ffcc00;
+
+        /* Адаптивність */
+        @media (max-width: 1024px) {
+            .row { grid-template-columns: repeat(2, 1fr); }
+            .rows-container { gap: 15px; }
         }
-        .animation-note {
-            font-style: italic;
-            color: #ffcc00;
+        @media (max-width: 768px) {
+            .row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .container { padding: 15px 10px; }
+        }
+        @media (max-width: 480px) {
+            .row { grid-template-columns: 1fr; }
+            .rows-container { gap: 12px; }
         }
     </style>
 </head>
 <body>
+    <canvas id="stars"></canvas>
+
     <div class="container">
-        <h1>SOHO/LASCO — Реал-тайм спостереження сонячної корони</h1>
-        <p>Дані з коронографів LASCO C2 та C3 на супутнику SOHO (NASA/ESA).<br>
-        Зображення та анімації оновлюються при перезавантаженні сторінки (нові дані кожні ~15-60 хвилин).</p>
-
-        <div class="image-section">
-            <h2>LASCO C2 (внутрішня корона, 1.5–6 сонячних радіусів)</h2>
-            
-            <p><strong>Останнє зображення:</strong></p>
-            <img src="https://soho.nrl.navy.mil/data/realtime-images/c2/latest.jpg" alt="LASCO C2 latest">
-            
-            <p><strong>Анімація за останні ~48 годин (звичайна):</strong></p>
-            <img src="https://soho.nascom.nasa.gov/data/LATEST/current_c2.gif" alt="LASCO C2 animation 48h" loading="lazy">
-            
-            <p><strong>Анімація running difference (краще видно динаміку CME та комет):</strong></p>
-            <img src="https://soho.nrl.navy.mil/data/realtime-images/c2/rdiff/latest.jpg" alt="LASCO C2 running difference latest">
-            <p class="animation-note">Для повної анімації difference — оновлюйте сторінку частіше, бо окремий GIF для difference не завжди доступний у реал-таймі.</p>
+        <!-- Клікабельний заголовок → Телеграм -->
+        <div class="main-title" onclick="window.open('https://t.me/ibonariumcosmodynamicslablive', '_blank')">
+            Ibonarium Cosmo Dynamics LAB LIVE
         </div>
 
-        <div class="image-section">
-            <h2>LASCO C3 (зовнішня корона, 3.7–30 сонячних радіусів)</h2>
-            
-            <p><strong>Останнє зображення:</strong></p>
-            <img src="https://soho.nrl.navy.mil/data/realtime-images/c3/latest.jpg" alt="LASCO C3 latest">
-            
-            <p><strong>Анімація за останні ~48 годин (звичайна):</strong></p>
-            <img src="https://soho.nascom.nasa.gov/data/LATEST/current_c3.gif" alt="LASCO C3 animation 48h" loading="lazy">
-            
-            <p><strong>Running difference (динаміка):</strong></p>
-            <img src="https://soho.nrl.navy.mil/data/realtime-images/c3/rdiff/latest.jpg" alt="LASCO C3 running difference">
-        </div>
+        <!-- Обгортка для рядів з можливим скролом на мобільних -->
+        <div class="rows-container">
+            <!-- Перший ряд: LASCO C2 (червоний) + 3 фото SDO -->
+            <div class="row">
+                <div class="block red-gif">
+                    <img src="https://soho.nascom.nasa.gov/data/LATEST/current_c2.gif" alt="LASCO C2 animation" loading="lazy">
+                </div>
+                <div class="block sdo-photo">
+                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0171.jpg" alt="AIA 171 Å" loading="lazy">
+                </div>
+                <div class="block sdo-photo">
+                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0193.jpg" alt="AIA 193 Å" loading="lazy">
+                </div>
+                <div class="block sdo-photo">
+                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0304.jpg" alt="AIA 304 Å" loading="lazy">
+                </div>
+            </div>
 
-        <p class="refresh">Порада: Оновлюйте сторінку (F5 або Ctrl+R), щоб побачити найсвіжіші дані та анімації!</p>
+            <!-- Другий ряд: LASCO C3 (синій) + 3 інші фото SDO -->
+            <div class="row">
+                <div class="block blue-gif">
+                    <img src="https://soho.nascom.nasa.gov/data/LATEST/current_c3.gif" alt="LASCO C3 animation" loading="lazy">
+                </div>
+                <div class="block sdo-photo">
+                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0211.jpg" alt="AIA 211 Å" loading="lazy">
+                </div>
+                <div class="block sdo-photo">
+                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0131.jpg" alt="AIA 131 Å" loading="lazy">
+                </div>
+                <div class="block sdo-photo">
+                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0094.jpg" alt="AIA 094 Å" loading="lazy">
+                </div>
+            </div>
+        </div>
 
         <div class="note">
-            <p>Джерело: Naval Research Laboratory (NRL) / SOHO LASCO.<br>
-            Офіційний сайт: <a href="https://lasco-www.nrl.navy.mil/" style="color:#ffcc00;">lasco-www.nrl.navy.mil</a><br>
-            Реал-тайм анімації: <a href="https://soho.nascom.nasa.gov/data/realtime/gif/" style="color:#ffcc00;">SOHO GIF Movies</a><br>
-            Більше даних: <a href="https://sohowww.nascom.nasa.gov/data/realtime-images.html" style="color:#ffcc00;">SOHO Real-time Images</a></p>
-            <p>Анімації — це GIF за останні 48 годин (оновлюються щогодини). Вони ідеально показують рух CME та комет.</p>
+            NASA/ESA SOHO LASCO + NASA SDO AIA • Реал-тайм спостереження Сонця
         </div>
     </div>
 
-    <!-- Автооновлення кожні 15 хвилин (опціонально, раскоментуй якщо потрібно) -->
-    <!-- <script>
-        setTimeout(() => location.reload(), 900000); // 15 хвилин
-    </script> -->
+    <script>
+        // ===== OFF-GRID STARFIELD =====
+        const canvas = document.getElementById("stars");
+        const ctx = canvas.getContext("2d");
+        let W, H;
+        let stars = [];
+
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+            stars = Array.from({ length: 180 }, () => ({
+                x: Math.random() * W,
+                y: Math.random() * H,
+                z: Math.random() * W
+            }));
+        }
+
+        resize();
+        window.addEventListener("resize", resize);
+
+        function render() {
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.fillStyle = "#4dd2ff";
+            for (let s of stars) {
+                s.z -= 0.25;
+                if (s.z <= 0) s.z = W;
+
+                const k = 128 / s.z;
+                const x = (s.x - W / 2) * k + W / 2;
+                const y = (s.y - H / 2) * k + H / 2;
+
+                if (x > 0 && x < W && y > 0 && y < H) {
+                    const size = (1 - s.z / W) * 3;
+                    ctx.fillRect(x, y, size, size);
+                }
+            }
+            requestAnimationFrame(render);
+        }
+        render();
+    </script>
 </body>
 </html>
