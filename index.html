@@ -40,16 +40,13 @@
 
         .header {
             text-align: center;
-            padding: 15px 10px;
+            padding: 12px 10px;
             background: #000;
-            position: sticky;
-            top: 0;
-            z-index: 10;
             flex-shrink: 0;
         }
 
         .main-title {
-            font-size: clamp(24px, 7vw, 42px);
+            font-size: clamp(22px, 5vw, 36px);
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.08em;
@@ -63,27 +60,38 @@
             transform: scale(1.04);
         }
 
-        .content-scroll {
+        /* На мобільних — скрол, на десктопі — без скролу */
+        .content {
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding: 15px 10px;
-            scroll-behavior: smooth;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 15px;
+
+            /* Приховуємо скролбар, але скрол працює */
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
-        .content-scroll::-webkit-scrollbar {
+        .content::-webkit-scrollbar {
             display: none;
+        }
+
+        /* Тільки на десктопі (ширина > 768px) — без скролу */
+        @media (min-width: 769px) {
+            .content {
+                overflow-y: hidden;
+            }
         }
 
         .row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 10px;
         }
 
-        /* Зменшуємо блоки на ~10% (scale 0.9) */
         .block {
             width: 100%;
             aspect-ratio: 1 / 1;
@@ -92,7 +100,7 @@
             position: relative;
             cursor: pointer;
             transition: transform 0.3s ease;
-            transform: scale(0.90); /* Зменшення на 10% */
+            transform: scale(0.85);
             transform-origin: center;
         }
 
@@ -118,7 +126,7 @@
         }
 
         .block:hover {
-            transform: scale(0.95); /* При наведенні трохи збільшується */
+            transform: scale(0.90);
         }
 
         .block img {
@@ -146,21 +154,27 @@
 
         .footer {
             text-align: center;
-            padding: 12px 10px;
+            padding: 10px;
             background: #000;
-            position: sticky;
-            bottom: 0;
-            z-index: 10;
             flex-shrink: 0;
-            font-size: clamp(11px, 3vw, 14px);
+            font-size: clamp(10px, 2.5vw, 13px);
             opacity: 0.8;
             letter-spacing: 0.05em;
         }
 
         /* Адаптивність */
-        @media (max-width: 1024px) { .row { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 768px)  { .row { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
-        @media (max-width: 480px)  { .row { grid-template-columns: 1fr; } }
+        @media (max-width: 1024px) {
+            .row { grid-template-columns: repeat(2, 1fr); }
+            .block { transform: scale(0.92); }
+        }
+        @media (max-width: 768px) {
+            .row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .block { transform: scale(0.95); }
+        }
+        @media (max-width: 480px) {
+            .row { grid-template-columns: 1fr; }
+            .block { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -173,7 +187,7 @@
             </div>
         </div>
 
-        <div class="content-scroll">
+        <div class="content">
             <div class="row">
                 <div class="block red-gif">
                     <img src="https://soho.nascom.nasa.gov/data/LATEST/current_c2.gif" alt="LASCO C2" loading="lazy">
