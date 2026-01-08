@@ -7,7 +7,6 @@
     <meta name="robots" content="noindex,nofollow">
     <title>Ibonarium Cosmo Dynamics LAB LIVE</title>
 
-    <!-- GOOGLE FONTS: Cinzel -->
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
@@ -20,63 +19,71 @@
             width: 100%;
             height: 100%;
             background: #000;
-            overflow: hidden; /* Базово без скролу */
+            overflow: hidden;
             color: #cfefff;
             font-family: 'Cinzel', serif;
         }
 
-        /* STARFIELD */
         canvas {
             position: fixed;
             inset: 0;
             z-index: 0;
         }
 
-        /* CONTENT */
-        .container {
+        .wrapper {
             position: relative;
             z-index: 1;
-            height: 100%;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 20px 15px; /* Зменшено для мобільних */
-            max-width: 1400px;
-            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 15px 10px;
+            background: #000;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            flex-shrink: 0;
         }
 
         .main-title {
-            font-size: clamp(28px, 8vw, 48px); /* Адаптивний розмір */
+            font-size: clamp(24px, 7vw, 42px);
             font-weight: 700;
-            text-align: center;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             cursor: pointer;
             text-shadow: 0 0 20px #ffcc00;
             color: #ffcc00;
             transition: all 0.3s ease;
-            flex-shrink: 0; /* Не стискається */
         }
         .main-title:hover {
             text-shadow: 0 0 40px #ffcc00;
-            transform: scale(1.05);
+            transform: scale(1.04);
         }
 
-        /* Два ряди */
-        .rows-container {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 20px;
-            overflow-y: auto; /* Дозволяємо скрол тільки цьому блоку на мобільних */
-            -webkit-overflow-scrolling: touch; /* Плавний скрол на iOS */
+        /* Основний скрольний блок — без видимої смуги */
+        .content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 15px 10px;
+            scroll-behavior: smooth;
+
+            /* Прибираємо скролбар на всіх браузерах */
+            scrollbar-width: none;           /* Firefox */
+            -ms-overflow-style: none;        /* IE/Edge */
+        }
+        .content-scroll::-webkit-scrollbar {
+            display: none;                   /* Chrome, Safari, нові Edge */
         }
 
         .row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 12px;
+            margin-bottom: 20px;
         }
 
         .block {
@@ -94,131 +101,107 @@
             display: block;
         }
 
-        /* Червоний відтінок для LASCO C2 */
-        .red-gif img {
-            filter: hue-rotate(0deg) saturate(1.6) brightness(1.1);
-        }
+        .red-gif img { filter: hue-rotate(0deg) saturate(1.6) brightness(1.1); }
+        .blue-gif img { filter: hue-rotate(200deg) saturate(1.6) brightness(1.1); }
+        .sdo-photo { border: 3px solid #ffcc00; }
 
-        /* Синій відтінок для LASCO C3 */
-        .blue-gif img {
-            filter: hue-rotate(200deg) saturate(1.6) brightness(1.1);
-        }
-
-        /* Золотиста рамка для SDO фото */
-        .sdo-photo {
-            border: 3px solid #ffcc00;
-        }
-
-        .note {
+        .footer {
             text-align: center;
-            font-size: clamp(12px, 3vw, 14px);
+            padding: 12px 10px;
+            background: #000;
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+            flex-shrink: 0;
+            font-size: clamp(11px, 3vw, 14px);
             opacity: 0.8;
             letter-spacing: 0.05em;
-            flex-shrink: 0;
         }
 
         /* Адаптивність */
-        @media (max-width: 1024px) {
-            .row { grid-template-columns: repeat(2, 1fr); }
-            .rows-container { gap: 15px; }
-        }
-        @media (max-width: 768px) {
-            .row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .container { padding: 15px 10px; }
-        }
-        @media (max-width: 480px) {
-            .row { grid-template-columns: 1fr; }
-            .rows-container { gap: 12px; }
-        }
+        @media (max-width: 1024px) { .row { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 768px)  { .row { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
+        @media (max-width: 480px)  { .row { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <canvas id="stars"></canvas>
 
-    <div class="container">
-        <!-- Клікабельний заголовок → Телеграм -->
-        <div class="main-title" onclick="window.open('https://t.me/ibonariumcosmodynamicslablive', '_blank')">
-            Ibonarium Cosmo Dynamics LAB LIVE
+    <div class="wrapper">
+        <div class="header">
+            <div class="main-title" onclick="window.open('https://t.me/ibonariumcosmodynamicslablive', '_blank')">
+                Ibonarium Cosmo Dynamics LAB LIVE
+            </div>
         </div>
 
-        <!-- Обгортка для рядів з можливим скролом на мобільних -->
-        <div class="rows-container">
-            <!-- Перший ряд: LASCO C2 (червоний) + 3 фото SDO -->
+        <div class="content-scroll">
             <div class="row">
                 <div class="block red-gif">
-                    <img src="https://soho.nascom.nasa.gov/data/LATEST/current_c2.gif" alt="LASCO C2 animation" loading="lazy">
+                    <img src="https://soho.nascom.nasa.gov/data/LATEST/current_c2.gif" alt="LASCO C2" loading="lazy">
                 </div>
                 <div class="block sdo-photo">
-                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0171.jpg" alt="AIA 171 Å" loading="lazy">
+                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0171.jpg" alt="AIA 171" loading="lazy">
                 </div>
                 <div class="block sdo-photo">
-                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0193.jpg" alt="AIA 193 Å" loading="lazy">
+                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0193.jpg" alt="AIA 193" loading="lazy">
                 </div>
                 <div class="block sdo-photo">
-                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0304.jpg" alt="AIA 304 Å" loading="lazy">
+                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0304.jpg" alt="AIA 304" loading="lazy">
                 </div>
             </div>
 
-            <!-- Другий ряд: LASCO C3 (синій) + 3 інші фото SDO -->
             <div class="row">
                 <div class="block blue-gif">
-                    <img src="https://soho.nascom.nasa.gov/data/LATEST/current_c3.gif" alt="LASCO C3 animation" loading="lazy">
+                    <img src="https://soho.nascom.nasa.gov/data/LATEST/current_c3.gif" alt="LASCO C3" loading="lazy">
                 </div>
                 <div class="block sdo-photo">
-                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0211.jpg" alt="AIA 211 Å" loading="lazy">
+                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0211.jpg" alt="AIA 211" loading="lazy">
                 </div>
                 <div class="block sdo-photo">
-                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0131.jpg" alt="AIA 131 Å" loading="lazy">
+                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0131.jpg" alt="AIA 131" loading="lazy">
                 </div>
                 <div class="block sdo-photo">
-                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0094.jpg" alt="AIA 094 Å" loading="lazy">
+                    <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0094.jpg" alt="AIA 094" loading="lazy">
                 </div>
             </div>
         </div>
 
-        <div class="note">
+        <div class="footer">
             NASA/ESA SOHO LASCO + NASA SDO AIA • Реал-тайм спостереження Сонця
         </div>
     </div>
 
     <script>
-        // ===== OFF-GRID STARFIELD =====
+        // STARFIELD
         const canvas = document.getElementById("stars");
         const ctx = canvas.getContext("2d");
-        let W, H;
-        let stars = [];
+        let W, H, stars = [];
 
         function resize() {
             W = canvas.width = window.innerWidth;
             H = canvas.height = window.innerHeight;
-            stars = Array.from({ length: 180 }, () => ({
-                x: Math.random() * W,
-                y: Math.random() * H,
-                z: Math.random() * W
+            stars = Array.from({length: 180}, () => ({
+                x: Math.random()*W, y: Math.random()*H, z: Math.random()*W
             }));
         }
-
         resize();
         window.addEventListener("resize", resize);
 
         function render() {
             ctx.fillStyle = "#000";
-            ctx.fillRect(0, 0, W, H);
-
+            ctx.fillRect(0,0,W,H);
             ctx.fillStyle = "#4dd2ff";
-            for (let s of stars) {
+            stars.forEach(s => {
                 s.z -= 0.25;
                 if (s.z <= 0) s.z = W;
-
                 const k = 128 / s.z;
-                const x = (s.x - W / 2) * k + W / 2;
-                const y = (s.y - H / 2) * k + H / 2;
-
-                if (x > 0 && x < W && y > 0 && y < H) {
-                    const size = (1 - s.z / W) * 3;
-                    ctx.fillRect(x, y, size, size);
+                const x = (s.x - W/2) * k + W/2;
+                const y = (s.y - H/2) * k + H/2;
+                if (x>0 && x<W && y>0 && y<H) {
+                    const size = (1 - s.z/W)*3;
+                    ctx.fillRect(x,y,size,size);
                 }
-            }
+            });
             requestAnimationFrame(render);
         }
         render();
