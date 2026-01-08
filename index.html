@@ -63,20 +63,17 @@
             transform: scale(1.04);
         }
 
-        /* Основний скрольний блок — без видимої смуги */
         .content-scroll {
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 15px 10px;
             scroll-behavior: smooth;
-
-            /* Прибираємо скролбар на всіх браузерах */
-            scrollbar-width: none;           /* Firefox */
-            -ms-overflow-style: none;        /* IE/Edge */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
         .content-scroll::-webkit-scrollbar {
-            display: none;                   /* Chrome, Safari, нові Edge */
+            display: none;
         }
 
         .row {
@@ -86,12 +83,36 @@
             margin-bottom: 20px;
         }
 
+        /* Кіберпанк неонова рамка */
         .block {
             width: 100%;
             aspect-ratio: 1 / 1;
             overflow: hidden;
-            border-radius: 16px;
-            box-shadow: 0 0 25px rgba(255, 204, 0, 0.6);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .block::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            padding: 2px; /* Товщина рамки */
+            background: linear-gradient(45deg, #ffcc00, #ff6600, #ffcc00, #ffff66);
+            mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            -webkit-mask-composite: xor;
+            animation: neonPulse 4s linear infinite, neonFlicker 8s linear infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .block:hover::before,
+        .block:active::before {
+            animation-duration: 1s, 2s;
+            box-shadow: 0 0 30px #ffcc00;
         }
 
         .block img {
@@ -99,11 +120,24 @@
             height: 100%;
             object-fit: cover;
             display: block;
+            border-radius: 10px; /* Трохи менше, щоб рамка була видно */
         }
 
+        @keyframes neonPulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes neonFlicker {
+            0%, 100% { opacity: 1; }
+            2%, 68%, 92% { opacity: 0.95; }
+            4%, 70% { opacity: 0.8; }
+            6% { opacity: 1; }
+        }
+
+        /* Фільтри для GIF (зберігаємо) */
         .red-gif img { filter: hue-rotate(0deg) saturate(1.6) brightness(1.1); }
         .blue-gif img { filter: hue-rotate(200deg) saturate(1.6) brightness(1.1); }
-        .sdo-photo { border: 3px solid #ffcc00; }
 
         .footer {
             text-align: center;
@@ -139,13 +173,13 @@
                 <div class="block red-gif">
                     <img src="https://soho.nascom.nasa.gov/data/LATEST/current_c2.gif" alt="LASCO C2" loading="lazy">
                 </div>
-                <div class="block sdo-photo">
+                <div class="block">
                     <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0171.jpg" alt="AIA 171" loading="lazy">
                 </div>
-                <div class="block sdo-photo">
+                <div class="block">
                     <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0193.jpg" alt="AIA 193" loading="lazy">
                 </div>
-                <div class="block sdo-photo">
+                <div class="block">
                     <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0304.jpg" alt="AIA 304" loading="lazy">
                 </div>
             </div>
@@ -154,13 +188,13 @@
                 <div class="block blue-gif">
                     <img src="https://soho.nascom.nasa.gov/data/LATEST/current_c3.gif" alt="LASCO C3" loading="lazy">
                 </div>
-                <div class="block sdo-photo">
+                <div class="block">
                     <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0211.jpg" alt="AIA 211" loading="lazy">
                 </div>
-                <div class="block sdo-photo">
+                <div class="block">
                     <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0131.jpg" alt="AIA 131" loading="lazy">
                 </div>
-                <div class="block sdo-photo">
+                <div class="block">
                     <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0094.jpg" alt="AIA 094" loading="lazy">
                 </div>
             </div>
@@ -172,7 +206,7 @@
     </div>
 
     <script>
-        // STARFIELD
+        // STARFIELD (без змін)
         const canvas = document.getElementById("stars");
         const ctx = canvas.getContext("2d");
         let W, H, stars = [];
