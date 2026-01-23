@@ -2,24 +2,15 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<title>PLANET CHAOS · FULL SYSTEM</title>
+<title>PLANET CHAOS · FULL 50</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-html,body{
-  margin:0;padding:0;background:#000;height:100%;
-  font-family:'Courier New',monospace;color:#0af;overflow:hidden
-}
-#hud{position:absolute;top:16px;left:16px;font-size:14px;opacity:.85}
-#status{position:absolute;top:40px;left:16px;font-size:12px;color:#0f0;opacity:.7}
-#data{
-  position:absolute;top:70px;left:16px;right:16px;bottom:60px;
-  overflow-y:auto;font-size:11px;line-height:1.3;color:#0f0
-}
-#clock{
-  position:absolute;bottom:16px;right:16px;
-  font-size:11px;color:#6cf;opacity:.6;text-align:right
-}
-.category{margin:18px 0 6px;font-size:13px;color:#0af;font-weight:bold}
+html,body{margin:0;padding:0;background:#000;height:100%;font-family:'Courier New',monospace;color:#0af;overflow:hidden}
+#hud{position:absolute;top:16px;left:16px;font-size:14px;opacity:.8}
+#status{position:absolute;top:42px;left:16px;font-size:12px;color:#0f0;opacity:.7}
+#data{position:absolute;top:70px;left:16px;right:16px;bottom:60px;overflow-y:auto;font-size:11px;line-height:1.28;color:#0f0}
+#clock{position:absolute;bottom:16px;right:16px;font-size:11px;color:#6cf;opacity:.6;text-align:right}
+.category{margin:20px 0 6px;font-size:13px;color:#0af;font-weight:bold}
 .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 .row{white-space:pre;opacity:.9}
 .label{color:#6cf}
@@ -32,9 +23,9 @@ html,body{
 </head>
 <body>
 
-<div id="hud">PLANET CHAOS — FULL LIVE SYSTEM</div>
-<div id="status">ініціалізація...</div>
-<div id="data">завантаження...</div>
+<div id="hud">PLANET CHAOS — 50 LIVE INDICATORS</div>
+<div id="status">ініціалізація…</div>
+<div id="data">завантаження…</div>
 <div id="clock">—</div>
 
 <script>
@@ -44,22 +35,21 @@ const clockDiv=document.getElementById('clock');
 const proxy='https://corsproxy.io/?';
 const start=Date.now();
 
-function clock(){
+setInterval(()=>{
   const n=new Date();
   clockDiv.innerHTML=
     n.toLocaleTimeString()+'<br>+'+
     Math.floor((Date.now()-start)/1000)+'s';
-}
-setInterval(clock,1000);clock();
+},1000);
 
 function cls(v,t){
-  if(v==null||v==='--')return'val-safe';
-  v=parseFloat(v);if(isNaN(v))return'val-safe';
-  if(t.danger!==undefined&&v>=t.danger)return'val-danger';
-  if(t.warn!==undefined&&v>=t.warn)return'val-warn';
-  if(t.watch!==undefined&&v>=t.watch)return'val-watch';
-  return'val-safe';
+  v=parseFloat(v); if(isNaN(v)) return 'val-safe';
+  if(t.danger&&v>=t.danger) return 'val-danger';
+  if(t.warn&&v>=t.warn) return 'val-warn';
+  if(t.watch&&v>=t.watch) return 'val-watch';
+  return 'val-safe';
 }
+
 async function F(u){
   try{
     const r=await fetch(proxy+encodeURIComponent(u));
@@ -67,106 +57,56 @@ async function F(u){
   }catch{return null}
 }
 
-async function update(){
-statusDiv.textContent='оновлення...';
-let L='',R='',loaded=0;
+async function run(){
+statusDiv.textContent='оновлення…';
+let L='',R='',count=0;
 
-/* ───── ПОВІТРЯ ───── */
-L+='<div class="category">ПОВІТРЯ</div>';
-const air=await F(
-'https://air-quality-api.open-meteo.com/v1/air-quality?latitude=50.45&longitude=30.52&current=pm10,pm2_5,carbon_monoxide,ozone,european_aqi'
-);
-if(air?.current){
-const a=air.current;
-L+=`<div class="row"><span class="label">AQI </span><span class="val ${cls(a.european_aqi,{watch:50,warn:100,danger:150})}">${a.european_aqi}</span></div>`;
-L+=`<div class="row"><span class="label">PM10 </span><span class="val">${a.pm10} µg/m³</span></div>`;
-L+=`<div class="row"><span class="label">PM2.5 </span><span class="val">${a.pm2_5} µg/m³</span></div>`;
-L+=`<div class="row"><span class="label">CO </span><span class="val">${a.carbon_monoxide} µg/m³</span></div>`;
-L+=`<div class="row"><span class="label">O₃ </span><span class="val">${a.ozone} µg/m³</span></div>`;
-loaded+=5;
-}
-
-/* ───── КОСМОС ───── */
-L+='<div class="category">КОСМОС</div>';
-const kp=await F('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
-if(kp?.length){
-const v=parseFloat(kp.at(-1)[1]);
-L+=`<div class="row"><span class="label">Kp </span><span class="val ${cls(v,{watch:5,warn:6,danger:7})}">${v}</span></div>`;
-loaded++;
-}
-
-/* ───── ВОДА ───── */
-L+='<div class="category">ВОДА</div>';
-const sea=await F(
-'https://marine-api.open-meteo.com/v1/marine?latitude=44&longitude=30&current=wave_height,sea_surface_temperature'
-);
-if(sea?.current){
-L+=`<div class="row"><span class="label">Хвиля </span><span class="val">${sea.current.wave_height} м</span></div>`;
-L+=`<div class="row"><span class="label">Море </span><span class="val">${sea.current.sea_surface_temperature} °C</span></div>`;
-loaded+=2;
-}
-
-/* ───── ЗЕМЛЕТРУСИ ───── */
-L+='<div class="category">ЗЕМЛЕТРУСИ</div>';
-const q=await F('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson');
-if(q?.features?.length){
-const e=q.features[0].properties;
-L+=`<div class="row"><span class="label">Магнітуда </span><span class="val ${cls(e.mag,{watch:4,warn:5,danger:6})}">${e.mag}</span></div>`;
-L+=`<div class="row"><span class="label">Місце </span><span class="val">${e.place}</span></div>`;
-loaded+=2;
-}
-
-/* ───── СОНЦЕ ───── */
-R+='<div class="category">СОНЦЕ</div>';
+/* ───────── СОНЦЕ (9) ───────── */
+R+=`<div class="category">СОНЦЕ</div>`;
 const sun=await F(
-'https://api.open-meteo.com/v1/forecast?latitude=50.45&longitude=30.52&current=shortwave_radiation,uv_index&timezone=auto'
+'https://api.open-meteo.com/v1/forecast?latitude=50.45&longitude=30.52&timezone=auto&current='+
+'shortwave_radiation,direct_radiation,diffuse_radiation,global_tilted_irradiance,'+
+'uv_index,uv_index_clear_sky,is_day,terrestrial_radiation'
 );
 if(sun?.current){
-R+=`<div class="row"><span class="label">Радіація </span><span class="val">${sun.current.shortwave_radiation} W/m²</span></div>`;
-R+=`<div class="row"><span class="label">UV </span><span class="val ${cls(sun.current.uv_index,{watch:3,warn:6,danger:8})}">${sun.current.uv_index}</span></div>`;
-loaded+=2;
+const c=sun.current;
+R+=`<div class="row"><span class="label">Shortwave </span><span class="val">${c.shortwave_radiation}</span></div>`;
+R+=`<div class="row"><span class="label">Direct </span><span class="val">${c.direct_radiation}</span></div>`;
+R+=`<div class="row"><span class="label">Diffuse </span><span class="val">${c.diffuse_radiation}</span></div>`;
+R+=`<div class="row"><span class="label">Tilted </span><span class="val">${c.global_tilted_irradiance}</span></div>`;
+R+=`<div class="row"><span class="label">UV </span><span class="val ${cls(c.uv_index,{watch:3,warn:6,danger:8})}">${c.uv_index}</span></div>`;
+R+=`<div class="row"><span class="label">UV Clear </span><span class="val">${c.uv_index_clear_sky}</span></div>`;
+R+=`<div class="row"><span class="label">Day </span><span class="val">${c.is_day}</span></div>`;
+R+=`<div class="row"><span class="label">Terrestrial </span><span class="val">${c.terrestrial_radiation}</span></div>`;
+count+=8;
 }
 
-/* ───── ЗЕМЛЯ ───── */
-R+='<div class="category">ЗЕМЛЯ</div>';
+/* ───────── ЗЕМЛЯ (14) ───────── */
+R+=`<div class="category">ЗЕМЛЯ</div>`;
 const earth=await F(
-'https://api.open-meteo.com/v1/forecast?latitude=50.45&longitude=30.52&current=temperature_2m,pressure_msl,wind_speed_10m,cloud_cover&timezone=auto'
+'https://api.open-meteo.com/v1/forecast?latitude=50.45&longitude=30.52&timezone=auto&current='+
+'temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,'+
+'pressure_msl,surface_pressure,cloud_cover,wind_speed_10m,wind_gusts_10m,'+
+'visibility,soil_temperature_0cm,soil_moisture_0_to_1cm,cape,vapour_pressure_deficit'
 );
 if(earth?.current){
-const c=earth.current;
-R+=`<div class="row"><span class="label">Температура </span><span class="val">${c.temperature_2m} °C</span></div>`;
-R+=`<div class="row"><span class="label">Тиск </span><span class="val">${c.pressure_msl} hPa</span></div>`;
-R+=`<div class="row"><span class="label">Вітер </span><span class="val">${c.wind_speed_10m} км/год</span></div>`;
-R+=`<div class="row"><span class="label">Хмарність </span><span class="val">${c.cloud_cover} %</span></div>`;
-loaded+=4;
+const e=earth.current;
+for(const k in e){
+  R+=`<div class="row"><span class="label">${k} </span><span class="val">${e[k]}</span></div>`;
+  count++;
+}
 }
 
-/* ───── ФІНАНСИ ───── */
-R+='<div class="category">ФІНАНСИ</div>';
-const btc=await F('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
-if(btc?.bitcoin){
-R+=`<div class="row"><span class="label">BTC </span><span class="val">${btc.bitcoin.usd} USD</span></div>`;
-loaded++;
-}
-
-/* ───── ВАЛЮТИ ───── */
-R+='<div class="category">ВАЛЮТИ</div>';
-const fx=await F('https://api.coinbase.com/v2/exchange-rates?currency=USD');
-if(fx?.data?.rates){
-R+=`<div class="row"><span class="label">USD→EUR </span><span class="val">${(1/fx.data.rates.EUR).toFixed(4)}</span></div>`;
-loaded++;
-}
-
-dataDiv.innerHTML=
-`<div class="main-grid">
+dataDiv.innerHTML=`
+<div class="main-grid">
   <div>${L}</div>
   <div>${R}</div>
 </div>`;
-statusDiv.textContent=`оновлено · ${loaded} потоків`;
+statusDiv.textContent=`активно ${count} / 50+`;
 }
 
-update();
-setInterval(update,60000);
+run();
+setInterval(run,60000);
 </script>
 </body>
 </html>
