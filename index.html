@@ -2,299 +2,171 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<title>GEOMETRIC CHAOS · SMOOTH PULSE</title>
+<title>PLANET CHAOS · FULL SYSTEM</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-html, body { margin:0; padding:0; background:#000; overflow:hidden; height:100%; font-family:'Courier New', monospace; color:#0af; }
-canvas { display:block; }
-#hud { position:absolute; top:16px; left:16px; font-size:13px; opacity:0.7; pointer-events:none; letter-spacing:1px; }
-#data { position:absolute; bottom:16px; left:16px; font-size:10px; opacity:0.6; pointer-events:none; max-width:400px; line-height:1.4; }
-#data .real { color:#0f0; font-weight:bold; }
-#data .fallback { color:#888; }
-#data .warning { color:#ff0; }
-#clock { position:absolute; bottom:16px; right:16px; font-size:11px; opacity:0.45; color:#6cf; text-align:right; pointer-events:none; line-height:1.3; }
-#status { position:absolute; top:40px; left:16px; font-size:11px; opacity:0.6; color:#0af; }
+html,body{
+  margin:0;padding:0;background:#000;height:100%;
+  font-family:'Courier New',monospace;color:#0af;overflow:hidden
+}
+#hud{position:absolute;top:16px;left:16px;font-size:14px;opacity:.85}
+#status{position:absolute;top:40px;left:16px;font-size:12px;color:#0f0;opacity:.7}
+#data{
+  position:absolute;top:70px;left:16px;right:16px;bottom:60px;
+  overflow-y:auto;font-size:11px;line-height:1.3;color:#0f0
+}
+#clock{
+  position:absolute;bottom:16px;right:16px;
+  font-size:11px;color:#6cf;opacity:.6;text-align:right
+}
+.category{margin:18px 0 6px;font-size:13px;color:#0af;font-weight:bold}
+.main-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.row{white-space:pre;opacity:.9}
+.label{color:#6cf}
+.val{font-weight:bold}
+.val-safe{color:#0f0}
+.val-watch{color:#ffd700}
+.val-warn{color:#ff8c00}
+.val-danger{color:#f00}
 </style>
 </head>
 <body>
-<div id="hud">GEOMETRIC CHAOS — SMOOTH PULSE</div>
-<div id="status"></div>
-<div id="data">ініціалізація...</div>
+
+<div id="hud">PLANET CHAOS — FULL LIVE SYSTEM</div>
+<div id="status">ініціалізація...</div>
+<div id="data">завантаження...</div>
 <div id="clock">—</div>
-<canvas id="c"></canvas>
 
 <script>
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-const dataDiv = document.getElementById('data');
-const clockDiv = document.getElementById('clock');
-const statusDiv = document.getElementById('status');
+const dataDiv=document.getElementById('data');
+const statusDiv=document.getElementById('status');
+const clockDiv=document.getElementById('clock');
+const proxy='https://corsproxy.io/?';
+const start=Date.now();
 
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-window.addEventListener('resize', resize);
-resize();
-
-const startTime = Date.now();
-function formatRelativeTime(ms) {
-  const s = Math.floor(ms / 1000);
-  if (s < 60) return `+${s}s`;
-  const m = Math.floor(s / 60); const sec = s % 60;
-  if (m < 60) return `+${m}m ${sec}s`;
-  const h = Math.floor(m / 60); const min = m % 60;
-  return `+${h}h ${min}m`;
+function clock(){
+  const n=new Date();
+  clockDiv.innerHTML=
+    n.toLocaleTimeString()+'<br>+'+
+    Math.floor((Date.now()-start)/1000)+'s';
 }
-function updateClock() {
-  const now = new Date();
-  clockDiv.innerHTML = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}<br>${formatRelativeTime(Date.now() - startTime)}`;
+setInterval(clock,1000);clock();
+
+function cls(v,t){
+  if(v==null||v==='--')return'val-safe';
+  v=parseFloat(v);if(isNaN(v))return'val-safe';
+  if(t.danger!==undefined&&v>=t.danger)return'val-danger';
+  if(t.warn!==undefined&&v>=t.warn)return'val-warn';
+  if(t.watch!==undefined&&v>=t.watch)return'val-watch';
+  return'val-safe';
 }
-setInterval(updateClock, 1000); updateClock();
-
-const stars = [];
-for (let i = 0; i < 300; i++) {
-  stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*1.4+0.4, baseAlpha: Math.random()*0.4+0.25, twinkle: Math.random()*0.015+0.006 });
-}
-
-let realData = { seismic:0.5, magnetic:0.5, atmosphere_wind:0.5, atmosphere_pressure:0.5, atmosphere_temp:0.5, ocean:0.5, solar_radiation:0.5, solar_wind:0.5, precipitation:0.5, chaos:0.5 };
-let dataHistory = {}; Object.keys(realData).forEach(k => dataHistory[k] = []);
-let sources = {};
-
-const blobs = [
-  { param: 'seismic', color: 'rgba(220,60,80,', phase: 0.0, targetSize:6, targetAlpha:0.75 },
-  { param: 'magnetic', color: 'rgba(60,180,255,', phase: 1.2, targetSize:6, targetAlpha:0.75 },
-  { param: 'atmosphere_wind', color: 'rgba(80,255,160,', phase: 2.4, targetSize:6, targetAlpha:0.7 },
-  { param: 'atmosphere_temp', color: 'rgba(255,180,60,', phase: 3.6, targetSize:6, targetAlpha:0.7 },
-  { param: 'solar_radiation', color: 'rgba(255,240,100,', phase: 4.8, targetSize:5, targetAlpha:0.65 },
-  { param: 'solar_wind', color: 'rgba(200,120,255,', phase: 6.0, targetSize:6, targetAlpha:0.7 },
-  { param: 'precipitation', color: 'rgba(100,220,255,', phase: 7.2, targetSize:6, targetAlpha:0.7 }
-];
-blobs.forEach(b => { b.angle = Math.random()*Math.PI*2; b.radius = 60 + Math.random()*50; b.currentSize = b.targetSize; b.currentAlpha = b.targetAlpha; b.currentDist = b.radius; });
-
-function lerp(a, b, t) { return a + (b - a) * t; }
-
-async function fetchRealPlanetData() {
-  statusDiv.innerHTML = 'оновлення...';
-  let loaded = 0;
-
-  try {
-    // Open-Meteo
-    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=50.55&longitude=30.25&current=temperature_2m,wind_speed_10m,surface_pressure,precipitation,shortwave_radiation`;
-    const wRes = await fetch(weatherUrl);
-    if (wRes.ok) {
-      const w = (await wRes.json()).current || {};
-      realData.atmosphere_temp     = Math.min(1, Math.max(0, (w.temperature_2m + 40) / 80));
-      realData.atmosphere_wind     = Math.min(1, (w.wind_speed_10m || 0) / 80);
-      realData.atmosphere_pressure = Math.min(1, Math.max(0, ((w.surface_pressure || 1013) - 950) / 150));
-      realData.precipitation       = Math.min(1, (w.precipitation || 0) / 15);
-      realData.solar_radiation     = Math.min(1, (w.shortwave_radiation || 0) / 1200);
-      loaded += 5;
-      sources.atmosphere_temp = sources.atmosphere_wind = sources.atmosphere_pressure = sources.precipitation = sources.solar_radiation = true;
-    }
-
-    // Marine
-    const oceanRes = await fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=44.5&longitude=34.0&current=wave_height`);
-    if (oceanRes.ok) {
-      const o = (await oceanRes.json()).current || {};
-      realData.ocean = Math.min(1, (o.wave_height || 0) / 8);
-      loaded++;
-      sources.ocean = true;
-    }
-
-    // USGS
-    const eqRes = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson');
-    if (eqRes.ok) {
-      const eq = await eqRes.json();
-      const feats = eq.features || [];
-      const count = feats.length;
-      const maxMag = feats.reduce((m, f) => Math.max(m, f.properties?.mag || 0), 0);
-      realData.seismic = Math.min(1, (count / 30) + (maxMag / 10) * 0.5);
-      loaded++;
-      sources.seismic = true;
-    }
-
-    // NOAA (через проксі)
-    const proxy = 'https://corsproxy.io/?';
-    try {
-      const solarRes = await fetch(proxy + encodeURIComponent('https://services.swpc.noaa.gov/products/solar-wind/plasma-7-day.json'));
-      if (solarRes.ok) {
-        const data = await solarRes.json();
-        const latest = data[data.length - 1] || [];
-        const speed = parseFloat(latest[3]) || 400;
-        realData.solar_wind = Math.min(1, Math.max(0, (speed - 250) / 750));
-        loaded++;
-        sources.solar_wind = true;
-      }
-    } catch {}
-
-    try {
-      const kpRes = await fetch(proxy + encodeURIComponent('https://services.swpc.noaa.gov/products/geospace/planetary-k-index-1-minute.json'));
-      if (kpRes.ok) {
-        const data = await kpRes.json();
-        const latestKp = parseFloat(data[data.length - 1]?.[1]) || 0;
-        realData.magnetic = Math.min(1, latestKp / 9);
-        loaded++;
-        sources.magnetic = true;
-      }
-    } catch {}
-
-    // chaos
-    Object.keys(realData).forEach(k => {
-      if (k !== 'chaos') {
-        dataHistory[k].push(realData[k]);
-        if (dataHistory[k].length > 80) dataHistory[k].shift();
-      }
-    });
-
-    let vars = [];
-    Object.keys(dataHistory).forEach(k => {
-      if (k === 'chaos') return;
-      const h = dataHistory[k];
-      if (h.length < 2) return;
-      const mean = h.reduce((a,b)=>a+b,0)/h.length;
-      const varnce = h.reduce((a,b)=>a+(b-mean)**2,0)/h.length;
-      vars.push(Math.sqrt(varnce));
-    });
-    realData.chaos = vars.length ? Math.min(1, vars.reduce((a,b)=>a+b,0)/vars.length * 10) : 0.5;
-
-    blobs.forEach(b => {
-      const v = realData[b.param] || 0.5;
-      b.targetSize = 4 + v * 14;
-      b.targetAlpha = 0.3 + v * 0.6;
-      b.targetDist = 70 + v * 80;
-    });
-
-    // Вивід нижніх даних
-    let html = '';
-    Object.keys(realData).forEach(k => {
-      let cls = 'fallback';
-      if (sources[k] === true) cls = 'real';
-      else if (k !== 'chaos') cls = 'warning';
-      html += `${k.padEnd(20,' ')} <span class="${cls}">${realData[k].toFixed(3)}</span><br>`;
-    });
-    dataDiv.innerHTML = html;
-
-    statusDiv.innerHTML = loaded > 0 ? 'оновлено' : '';
-
-  } catch (e) {
-    console.error(e);
-    statusDiv.innerHTML = '';
-  }
-}
-fetchRealPlanetData();
-setInterval(fetchRealPlanetData, 120000);
-
-let t = 0;
-
-// === Нова функція: система координат зліва + точки + зв'язки ===
-function drawCoordinateSystem() {
-    const margin = 40;
-    const width = 200;
-    const height = canvas.height - 80;
-    ctx.strokeStyle = '#0af';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(margin, 40); // Y-axis
-    ctx.lineTo(margin, height + 40);
-    ctx.lineTo(width + margin, height + 40); // X-axis
-    ctx.stroke();
-
-    ctx.fillStyle = '#0af';
-    ctx.font = '11px Courier New';
-    const keys = Object.keys(realData);
-    keys.forEach((k, i) => {
-        const y = 40 + i * (height / (keys.length-1));
-        ctx.fillText(k, 5, y+3);
-    });
-
-    // точки та зв'язки
-    ctx.strokeStyle = 'rgba(0,255,150,0.6)';
-    ctx.fillStyle = 'rgba(0,255,150,0.8)';
-    ctx.lineWidth = 1.2;
-    let prev = null;
-    keys.forEach((k,i)=>{
-        const x = margin + realData[k]*width;
-        const y = 40 + i * (height / (keys.length-1));
-        ctx.beginPath();
-        ctx.arc(x, y, 5, 0, 2*Math.PI);
-        ctx.fill();
-        if(prev){
-            ctx.beginPath();
-            ctx.moveTo(prev.x, prev.y);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-        }
-        prev = {x:x, y:y};
-    });
+async function F(u){
+  try{
+    const r=await fetch(proxy+encodeURIComponent(u));
+    return r.ok?await r.json():null;
+  }catch{return null}
 }
 
-function loop() {
-  t += 0.016;
-  ctx.fillStyle = 'rgba(0,0,0,0.07)';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+async function update(){
+statusDiv.textContent='оновлення...';
+let L='',R='',loaded=0;
 
-  // === Зірки ===
-  const chaos = realData.chaos;
-  const starMod = 1 - chaos * 0.35;
-  stars.forEach(s => {
-    const tw = Math.sin(t * s.twinkle * 12 + s.x * 0.008) * 0.18 * starMod;
-    ctx.fillStyle = `rgba(220,235,255,${Math.max(0.08, s.baseAlpha + tw).toFixed(3)})`;
-    ctx.fillRect(s.x, s.y, s.size, s.size);
-  });
-
-  const cx = canvas.width/2, cy = canvas.height/2;
-  const smooth = 0.04 + chaos * 0.10;
-  const avg = blobs.reduce((s,b)=>s + (realData[b.param]||0.5), 0) / blobs.length;
-
-  // === Blobs ===
-  blobs.forEach(b => {
-    b.currentSize  = lerp(b.currentSize, b.targetSize, smooth);
-    b.currentAlpha = lerp(b.currentAlpha, b.targetAlpha, smooth*1.2);
-    b.currentDist  = lerp(b.currentDist, b.targetDist, smooth*0.8);
-
-    const pulse = Math.sin(t*0.7 + b.phase)*0.15 + Math.sin(t*1.3 + b.phase*1.4)*0.09 + Math.sin(t*2.1 + b.phase*0.7)*0.06*chaos;
-    const size = b.currentSize * (1 + pulse * (0.4 + chaos*0.9));
-
-    b.angle += (0.008 + avg*0.03 + chaos*0.04) * (1 + pulse*0.3);
-
-    const x = cx + Math.cos(b.angle)*b.currentDist;
-    const y = cy + Math.sin(b.angle)*b.currentDist;
-
-    ctx.fillStyle = b.color + (b.currentAlpha + pulse*0.25).toFixed(2) + ')';
-    ctx.beginPath(); ctx.arc(x,y,size,0,Math.PI*2); ctx.fill();
-  });
-
-  const ringBase = 110 + Math.sin(t*0.25)*18 + Math.sin(t*0.48)*12;
-  const ringR = ringBase * (1 + chaos*0.35 + Math.sin(t*0.9)*0.08);
-  ctx.beginPath(); ctx.arc(cx,cy,ringR,0,Math.PI*2);
-  ctx.strokeStyle = `rgba(140,240,255,${0.06 + chaos*0.18 + Math.sin(t*1.1)*0.04})`;
-  ctx.lineWidth = 1.4 + chaos*3.2; ctx.stroke();
-
-  // === Кільця та зв'язки blobs ===
-  ctx.strokeStyle = `rgba(200,255,255,${0.02 + chaos*0.08})`; ctx.lineWidth = 0.5;
-  blobs.forEach(b => {
-    const x = cx + Math.cos(b.angle)*b.currentDist;
-    const y = cy + Math.sin(b.angle)*b.currentDist;
-    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
-  });
-
-  // === Полігон ===
-  const sides = 3 + Math.floor(chaos*5);
-  const polyR = ringR*1.2 + realData.solar_radiation*30;
-  ctx.beginPath();
-  for (let i=0; i<sides; i++) {
-    const ang = (Math.PI*2/sides)*i + t*0.1;
-    const px = cx + Math.cos(ang)*polyR;
-    const py = cy + Math.sin(ang)*polyR;
-    i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
-  }
-  ctx.closePath();
-  ctx.strokeStyle = `rgba(255,200,100,${0.04 + realData.solar_wind*0.1})`; ctx.stroke();
-
-  // === Система координат зліва ===
-  drawCoordinateSystem();
-
-  requestAnimationFrame(loop);
+/* ───── ПОВІТРЯ ───── */
+L+='<div class="category">ПОВІТРЯ</div>';
+const air=await F(
+'https://air-quality-api.open-meteo.com/v1/air-quality?latitude=50.45&longitude=30.52&current=pm10,pm2_5,carbon_monoxide,ozone,european_aqi'
+);
+if(air?.current){
+const a=air.current;
+L+=`<div class="row"><span class="label">AQI </span><span class="val ${cls(a.european_aqi,{watch:50,warn:100,danger:150})}">${a.european_aqi}</span></div>`;
+L+=`<div class="row"><span class="label">PM10 </span><span class="val">${a.pm10} µg/m³</span></div>`;
+L+=`<div class="row"><span class="label">PM2.5 </span><span class="val">${a.pm2_5} µg/m³</span></div>`;
+L+=`<div class="row"><span class="label">CO </span><span class="val">${a.carbon_monoxide} µg/m³</span></div>`;
+L+=`<div class="row"><span class="label">O₃ </span><span class="val">${a.ozone} µg/m³</span></div>`;
+loaded+=5;
 }
-loop();
+
+/* ───── КОСМОС ───── */
+L+='<div class="category">КОСМОС</div>';
+const kp=await F('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
+if(kp?.length){
+const v=parseFloat(kp.at(-1)[1]);
+L+=`<div class="row"><span class="label">Kp </span><span class="val ${cls(v,{watch:5,warn:6,danger:7})}">${v}</span></div>`;
+loaded++;
+}
+
+/* ───── ВОДА ───── */
+L+='<div class="category">ВОДА</div>';
+const sea=await F(
+'https://marine-api.open-meteo.com/v1/marine?latitude=44&longitude=30&current=wave_height,sea_surface_temperature'
+);
+if(sea?.current){
+L+=`<div class="row"><span class="label">Хвиля </span><span class="val">${sea.current.wave_height} м</span></div>`;
+L+=`<div class="row"><span class="label">Море </span><span class="val">${sea.current.sea_surface_temperature} °C</span></div>`;
+loaded+=2;
+}
+
+/* ───── ЗЕМЛЕТРУСИ ───── */
+L+='<div class="category">ЗЕМЛЕТРУСИ</div>';
+const q=await F('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson');
+if(q?.features?.length){
+const e=q.features[0].properties;
+L+=`<div class="row"><span class="label">Магнітуда </span><span class="val ${cls(e.mag,{watch:4,warn:5,danger:6})}">${e.mag}</span></div>`;
+L+=`<div class="row"><span class="label">Місце </span><span class="val">${e.place}</span></div>`;
+loaded+=2;
+}
+
+/* ───── СОНЦЕ ───── */
+R+='<div class="category">СОНЦЕ</div>';
+const sun=await F(
+'https://api.open-meteo.com/v1/forecast?latitude=50.45&longitude=30.52&current=shortwave_radiation,uv_index&timezone=auto'
+);
+if(sun?.current){
+R+=`<div class="row"><span class="label">Радіація </span><span class="val">${sun.current.shortwave_radiation} W/m²</span></div>`;
+R+=`<div class="row"><span class="label">UV </span><span class="val ${cls(sun.current.uv_index,{watch:3,warn:6,danger:8})}">${sun.current.uv_index}</span></div>`;
+loaded+=2;
+}
+
+/* ───── ЗЕМЛЯ ───── */
+R+='<div class="category">ЗЕМЛЯ</div>';
+const earth=await F(
+'https://api.open-meteo.com/v1/forecast?latitude=50.45&longitude=30.52&current=temperature_2m,pressure_msl,wind_speed_10m,cloud_cover&timezone=auto'
+);
+if(earth?.current){
+const c=earth.current;
+R+=`<div class="row"><span class="label">Температура </span><span class="val">${c.temperature_2m} °C</span></div>`;
+R+=`<div class="row"><span class="label">Тиск </span><span class="val">${c.pressure_msl} hPa</span></div>`;
+R+=`<div class="row"><span class="label">Вітер </span><span class="val">${c.wind_speed_10m} км/год</span></div>`;
+R+=`<div class="row"><span class="label">Хмарність </span><span class="val">${c.cloud_cover} %</span></div>`;
+loaded+=4;
+}
+
+/* ───── ФІНАНСИ ───── */
+R+='<div class="category">ФІНАНСИ</div>';
+const btc=await F('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+if(btc?.bitcoin){
+R+=`<div class="row"><span class="label">BTC </span><span class="val">${btc.bitcoin.usd} USD</span></div>`;
+loaded++;
+}
+
+/* ───── ВАЛЮТИ ───── */
+R+='<div class="category">ВАЛЮТИ</div>';
+const fx=await F('https://api.coinbase.com/v2/exchange-rates?currency=USD');
+if(fx?.data?.rates){
+R+=`<div class="row"><span class="label">USD→EUR </span><span class="val">${(1/fx.data.rates.EUR).toFixed(4)}</span></div>`;
+loaded++;
+}
+
+dataDiv.innerHTML=
+`<div class="main-grid">
+  <div>${L}</div>
+  <div>${R}</div>
+</div>`;
+statusDiv.textContent=`оновлено · ${loaded} потоків`;
+}
+
+update();
+setInterval(update,60000);
 </script>
 </body>
 </html>
