@@ -2,24 +2,21 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<title>PLANET CHAOS · FULL SYSTEM</title>
+<title>PLANET CHAOS · REAL-TIME PLANETARY SYSTEM</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-html,body{
-  margin:0;padding:0;background:#000;color:#0af;
-  font-family:'Courier New',monospace;overflow:hidden;height:100%;
-}
+html,body{margin:0;padding:0;background:#000;color:#0af;
+font-family:'Courier New',monospace;overflow:hidden;height:100%}
 #hud{position:absolute;top:14px;left:16px;font-size:14px;opacity:.8}
 #status{position:absolute;top:36px;left:16px;font-size:12px;color:#0f0}
 #data{position:absolute;top:60px;left:16px;right:16px;bottom:50px;
-  overflow:auto;font-size:11px;line-height:1.35}
+overflow:auto;font-size:11px;line-height:1.35}
 #clock{position:absolute;bottom:14px;right:16px;font-size:11px;opacity:.6}
 .category{margin:18px 0 6px;font-size:13px;color:#6cf;font-weight:bold}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
 .row{white-space:pre}
 .label{color:#6cf}
 .val{font-weight:bold}
-.safe{color:#0f0}.watch{color:#ffd700}.warn{color:#ff8c00}.danger{color:#f00}
 </style>
 </head>
 
@@ -36,107 +33,71 @@ const S=document.getElementById('status');
 const C=document.getElementById('clock');
 const T0=Date.now();
 
-setInterval(()=>{const n=new Date();
-C.innerHTML=n.toLocaleTimeString()+"<br>+"+Math.floor((Date.now()-T0)/1000)+"s";
+setInterval(()=>{
+  const n=new Date();
+  C.innerHTML=n.toLocaleTimeString()+"<br>+"+
+  Math.floor((Date.now()-T0)/1000)+"s";
 },1000);
 
-const cls=(v,a,b,c)=>v>=c?'danger':v>=b?'warn':v>=a?'watch':'safe';
-const f=async u=>{try{const r=await fetch(P+encodeURIComponent(u));return r.ok?await r.json():null}catch{return null}};
+async function f(u){
+  try{
+    const r=await fetch(P+encodeURIComponent(u));
+    return r.ok?await r.json():null;
+  }catch{return null;}
+}
 
 async function load(){
-let L='',R='',k=0;
+let L='',R='';
 
 /* ☀️ СОНЦЕ */
 R+=`<div class="category">☀️ СОНЦЕ</div>`;
-let x=await f('https://services.swpc.noaa.gov/json/goes/primary/xray-flares-latest.json');
-let f107=await f('https://services.swpc.noaa.gov/json/f107.json');
-let kp=await f('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
-let sw=await f('https://services.swpc.noaa.gov/products/solar-wind/plasma-7-day.json');
-let pr=await f('https://services.swpc.noaa.gov/json/goes/primary/proton-flux.json');
-if(x?.[0])R+=`<div class=row><span class=label>X-ray </span><span class=val>${x[0].flux}</span></div>`;
-if(f107?.length)R+=`<div class=row><span class=label>F10.7 </span><span class="val ${cls(f107.at(-1).flux,120,160,200)}">${f107.at(-1).flux}</span></div>`;
-if(kp?.length)R+=`<div class=row><span class=label>Kp </span><span class="val ${cls(kp.at(-1)[1],4,6,7)}">${kp.at(-1)[1]}</span></div>`;
-if(sw?.length)R+=`<div class=row><span class=label>Solar Wind </span><span class=val>${sw.at(-1)[3]} km/s</span></div>`;
-if(pr?.length)R+=`<div class=row><span class=label>Proton </span><span class=val>${pr.at(-1)['>10 MeV']}</span></div>`;
+const x=await f('https://services.swpc.noaa.gov/json/goes/primary/xray-flares-latest.json');
+const f107=await f('https://services.swpc.noaa.gov/json/f107.json');
+const kp=await f('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
+const sw=await f('https://services.swpc.noaa.gov/products/solar-wind/plasma-7-day.json');
+const pr=await f('https://services.swpc.noaa.gov/json/goes/primary/proton-flux.json');
+R+=`<div class=row><span class=label>X-ray </span><span class=val>${x?.[0]?.flux||'--'}</span></div>`;
+R+=`<div class=row><span class=label>F10.7 </span><span class=val>${f107?.at?.(-1)?.flux||'--'}</span></div>`;
+R+=`<div class=row><span class=label>Kp </span><span class=val>${kp?.at?.(-1)?.[1]||'--'}</span></div>`;
+R+=`<div class=row><span class=label>Solar Wind </span><span class=val>${sw?.at?.(-1)?.[3]||'--'} km/s</span></div>`;
+R+=`<div class=row><span class=label>Proton </span><span class=val>${pr?.at?.(-1)?.['>10 MeV']||'--'}</span></div>`;
 
 /* 🌌 КОСМОС */
 L+=`<div class="category">🌌 КОСМОС</div>`;
-let dst=await f('https://services.swpc.noaa.gov/products/kyoto-dst.json');
-let el=await f('https://services.swpc.noaa.gov/json/goes/primary/electron-flux.json');
-let cme=await f('https://api.nasa.gov/DONKI/CME?startDate=2025-01-01&endDate=2025-12-31&api_key=DEMO_KEY');
-if(dst?.length)L+=`<div class=row><span class=label>Dst </span><span class=val>${dst.at(-1)[1]} nT</span></div>`;
-if(el?.length)L+=`<div class=row><span class=label>Electron </span><span class=val>${el.at(-1).flux}</span></div>`;
-L+=`<div class=row><span class=label>CME count </span><span class=val>${cme?.length||0}</span></div>`;
-L+=`<div class=row><span class=label>Heliosphere </span><span class=val>ACTIVE</span></div>`;
+const dst=await f('https://services.swpc.noaa.gov/products/kyoto-dst.json');
+const el=await f('https://services.swpc.noaa.gov/json/goes/primary/electron-flux.json');
+L+=`<div class=row><span class=label>Dst </span><span class=val>${dst?.at?.(-1)?.[1]||'--'}</span></div>`;
+L+=`<div class=row><span class=label>Electron </span><span class=val>${el?.at?.(-1)?.flux||'--'}</span></div>`;
+L+=`<div class=row><span class=label>Magnetosphere </span><span class=val>ACTIVE</span></div>`;
 L+=`<div class=row><span class=label>Radiation </span><span class=val>MONITOR</span></div>`;
-
-/* 🌍 ЗЕМЛЯ */
-R+=`<div class="category">🌍 ЗЕМЛЯ</div>`;
-let e=await f('https://api.open-meteo.com/v1/forecast?latitude=50.45&longitude=30.52&current=temperature_2m,pressure_msl,relative_humidity_2m,wind_speed_10m,cloud_cover');
-if(e?.current){
-let c=e.current;
-R+=`<div class=row><span class=label>T </span><span class=val>${c.temperature_2m}°C</span></div>`;
-R+=`<div class=row><span class=label>P </span><span class=val>${c.pressure_msl}</span></div>`;
-R+=`<div class=row><span class=label>RH </span><span class=val>${c.relative_humidity_2m}%</span></div>`;
-R+=`<div class=row><span class=label>Wind </span><span class=val>${c.wind_speed_10m}</span></div>`;
-R+=`<div class=row><span class=label>Cloud </span><span class=val>${c.cloud_cover}%</span></div>`;
-}
+L+=`<div class=row><span class=label>Heliosphere </span><span class=val>ONLINE</span></div>`;
 
 /* 🌫 ПОВІТРЯ */
 L+=`<div class="category">🌫 ПОВІТРЯ</div>`;
-let a=await f('https://air-quality-api.open-meteo.com/v1/air-quality?latitude=50.45&longitude=30.52&current=pm10,pm2_5,carbon_monoxide,ozone,european_aqi');
-if(a?.current){
-let c=a.current;
-L+=`<div class=row><span class=label>AQI </span><span class=val>${c.european_aqi}</span></div>`;
-L+=`<div class=row><span class=label>PM10 </span><span class=val>${c.pm10}</span></div>`;
-L+=`<div class=row><span class=label>PM2.5 </span><span class=val>${c.pm2_5}</span></div>`;
-L+=`<div class=row><span class=label>CO </span><span class=val>${c.carbon_monoxide}</span></div>`;
-L+=`<div class=row><span class=label>O₃ </span><span class=val>${c.ozone}</span></div>`;
-}
+const a=await f('https://air-quality-api.open-meteo.com/v1/air-quality?latitude=50.45&longitude=30.52&current=pm10,pm2_5,carbon_monoxide,ozone,european_aqi');
+L+=`<div class=row><span class=label>AQI </span><span class=val>${a?.current?.european_aqi||'--'}</span></div>`;
+L+=`<div class=row><span class=label>PM10 </span><span class=val>${a?.current?.pm10||'--'}</span></div>`;
+L+=`<div class=row><span class=label>PM2.5 </span><span class=val>${a?.current?.pm2_5||'--'}</span></div>`;
+L+=`<div class=row><span class=label>CO </span><span class=val>${a?.current?.carbon_monoxide||'--'}</span></div>`;
+L+=`<div class=row><span class=label>O₃ </span><span class=val>${a?.current?.ozone||'--'}</span></div>`;
 
 /* 🌊 ОКЕАН */
 R+=`<div class="category">🌊 ОКЕАН</div>`;
-let m=await f('https://marine-api.open-meteo.com/v1/marine?latitude=44&longitude=30&current=wave_height,wave_period,wave_direction,sea_surface_temperature,wind_wave_height');
-if(m?.current){
-let c=m.current;
-R+=`<div class=row><span class=label>Wave H </span><span class=val>${c.wave_height}</span></div>`;
-R+=`<div class=row><span class=label>Wave P </span><span class=val>${c.wave_period}</span></div>`;
-R+=`<div class=row><span class=label>Wave Dir </span><span class=val>${c.wave_direction}</span></div>`;
-R+=`<div class=row><span class=label>SST </span><span class=val>${c.sea_surface_temperature}</span></div>`;
-R+=`<div class=row><span class=label>Wind Wave </span><span class=val>${c.wind_wave_height}</span></div>`;
-}
-
-/* 💰 ФІНАНСИ */
-L+=`<div class="category">💰 ФІНАНСИ</div>`;
-let sp=await f('https://query1.finance.yahoo.com/v8/finance/chart/^GSPC');
-let dj=await f('https://query1.finance.yahoo.com/v8/finance/chart/^DJI');
-let nq=await f('https://query1.finance.yahoo.com/v8/finance/chart/^IXIC');
-let gold=await f('https://query1.finance.yahoo.com/v8/finance/chart/GC=F');
-let oil=await f('https://query1.finance.yahoo.com/v8/finance/chart/CL=F');
-if(sp?.chart)L+=`<div class=row><span class=label>S&P500 </span><span class=val>${sp.chart.result[0].meta.regularMarketPrice}</span></div>`;
-if(dj?.chart)L+=`<div class=row><span class=label>Dow </span><span class=val>${dj.chart.result[0].meta.regularMarketPrice}</span></div>`;
-if(nq?.chart)L+=`<div class=row><span class=label>NASDAQ </span><span class=val>${nq.chart.result[0].meta.regularMarketPrice}</span></div>`;
-if(gold?.chart)L+=`<div class=row><span class=label>Gold </span><span class=val>${gold.chart.result[0].meta.regularMarketPrice}</span></div>`;
-if(oil?.chart)L+=`<div class=row><span class=label>Oil </span><span class=val>${oil.chart.result[0].meta.regularMarketPrice}</span></div>`;
+const m=await f('https://marine-api.open-meteo.com/v1/marine?latitude=44&longitude=30&current=wave_height,wave_period,wave_direction,sea_surface_temperature,wind_wave_height');
+R+=`<div class=row><span class=label>Wave H </span><span class=val>${m?.current?.wave_height||'--'}</span></div>`;
+R+=`<div class=row><span class=label>Wave P </span><span class=val>${m?.current?.wave_period||'--'}</span></div>`;
+R+=`<div class=row><span class=label>Wave Dir </span><span class=val>${m?.current?.wave_direction||'--'}</span></div>`;
+R+=`<div class=row><span class=label>SST </span><span class=val>${m?.current?.sea_surface_temperature||'--'}</span></div>`;
+R+=`<div class=row><span class=label>Wind Wave </span><span class=val>${m?.current?.wind_wave_height||'--'}</span></div>`;
 
 /* ₿ КРИПТА */
 R+=`<div class="category">₿ КРИПТА</div>`;
-let c=await f('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,cardano,polkadot&vs_currencies=usd');
-if(c){
-R+=`<div class=row><span class=label>BTC </span><span class=val>${c.bitcoin.usd}</span></div>`;
-R+=`<div class=row><span class=label>ETH </span><span class=val>${c.ethereum.usd}</span></div>`;
-R+=`<div class=row><span class=label>SOL </span><span class=val>${c.solana.usd}</span></div>`;
-R+=`<div class=row><span class=label>ADA </span><span class=val>${c.cardano.usd}</span></div>`;
-R+=`<div class=row><span class=label>DOT </span><span class=val>${c.polkadot.usd}</span></div>`;
-}
-
-/* 🌱 БІОСФЕРА */
-L+=`<div class="category">🌱 БІОСФЕРА</div>`;
-L+=`<div class=row><span class=label>CO₂ </span><span class=val>420 ppm</span></div>`;
-L+=`<div class=row><span class=label>NDVI </span><span class=val>0.63</span></div>`;
-L+=`<div class=row><span class=label>Ocean pH </span><span class=val>8.06</span></div>`;
-L+=`<div class=row><span class=label>Biodiversity </span><span class=val>STRESSED</span></div>`;
-L+=`<div class=row><span class=label>Human Pressure </span><span class=val>HIGH</span></div>`;
+const c=await f('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,cardano,polkadot&vs_currencies=usd');
+R+=`<div class=row><span class=label>BTC </span><span class=val>${c?.bitcoin?.usd||'--'}</span></div>`;
+R+=`<div class=row><span class=label>ETH </span><span class=val>${c?.ethereum?.usd||'--'}</span></div>`;
+R+=`<div class=row><span class=label>SOL </span><span class=val>${c?.solana?.usd||'--'}</span></div>`;
+R+=`<div class=row><span class=label>ADA </span><span class=val>${c?.cardano?.usd||'--'}</span></div>`;
+R+=`<div class=row><span class=label>DOT </span><span class=val>${c?.polkadot?.usd||'--'}</span></div>`;
 
 D.innerHTML=`<div class=grid><div>${L}</div><div>${R}</div></div>`;
 S.innerHTML='усі системи онлайн • '+new Date().toLocaleTimeString();
